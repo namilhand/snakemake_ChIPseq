@@ -1,0 +1,41 @@
+SAMPLES: [
+          "WT_SPO11oligos_Rep1",
+          "WT_SPO11oligos_Rep2"
+#          "WT_SPO11oligos_Rep3"
+         ]
+THREADS: 48
+MEMORY: "250g"
+FILTER:
+  fastqc:
+      adapters: "data/adapter_list.txt"
+  cutadapt:
+      5prime_cut: 5 # -u ( 5 for Rep1 and Rep2, 10 for Rep3 )
+      3prime_cut: -0 # -u ( -0 for Rep1 and Rep2, -21 for Rep3 )
+      adapter: GGGTGGAATTCTCGGGTGCCAAGGCT # -a ( GGGTGGAATTCTCGGGTGCCAAGGCT for Rep1 and Rep2, GGGGTGGAATTCTCGGGTGCCAAGGCT for Rep3 )
+      quality-filter: 19 # -q
+      minimum-overlap: 3 # -O (default: 3)
+      minimum-length: 20 # -m
+      maximum-length: 70 # -M
+      extra-params:
+# NOTE: reference genome-specific mapping parameters
+MAPPING:
+      alignments: 10 # "In -k <N> mode, Bowtie 2 searches for up to N distinct, valid alignments for each read"
+      reference: "data/index/TAIR10_chr_all"
+      MAPQunique: 42 # -q
+      MAPQmaxi: 10 # -q
+      sortMemory: "5G"
+COVERAGE:
+      normalizeUsing: "BPM"
+      ignoreForNormalization: "mitochondria chloroplast" # Reference genome-specific parameter
+      extendReads: 45
+      binSize: 1
+      genomeBinSize: 10000
+      genomeBinName: "10kb"
+
+# NEBNext adapter and universal primer for Illumina:
+# https://international.neb.com/-/media/catalog/datacards-or-manuals/manuale7335.pdf
+# https://www.biostars.org/p/149301/
+# https://cutadapt.readthedocs.io/en/stable/guide.html#illumina-truseq
+# http://bioinformatics.cvr.ac.uk/blog/illumina-adapter-and-primer-sequences/
+# TruSeq adapters:
+# http://emea.support.illumina.com/bulletins/2016/12/what-sequences-do-i-use-for-adapter-trimming.html

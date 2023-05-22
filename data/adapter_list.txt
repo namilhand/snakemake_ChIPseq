@@ -1,0 +1,40 @@
+# This file contains a set of sequence fragments which will be explicitly
+# searched against your library.  The reporting will be similar to the 
+# Kmer plot, except that every sequence in this list will be shown so 
+# you can use this to judge the level of adapter read-through even if those
+# adapter sequences aren't picked out by the Kmer module.
+#
+# Since every sequence here will be analysed and the results plotted it 
+# doesn't make any sense to include duplicate sequences, or to add too
+# many sequences since your plot will end up a mess.
+#
+# You can add more sequences to the file by putting one line per entry
+# and specifying a name[tab]sequence.  If the contaminant you add is 
+# likely to be of use to others please consider sending it to the FastQ
+# authors, either via a bug report at www.bioinformatics.babraham.ac.uk/bugzilla/
+# or by directly emailing simon.andrews@babraham.ac.uk so other users of
+# the program can benefit.
+#
+# For the time being it's going to be easier to interpret this plot if all
+# of the sequences provided are the same length, so we've gone with 12bp
+# fragments for now.
+
+Illumina Universal Adapter					AGATCGGAAGAG
+Illumina Small RNA 3' Adapter				TGGAATTCTCGG
+Illumina Small RNA 5' Adapter				GATCGTCGGACT
+Nextera Transposase Sequence				CTGTCTCTTATA
+SOLID Small RNA Adapter						CGCCTTGGCCGT
+SPO11-3AD top						TGGAATTCTCGG
+SPO11-3AD top-1						TGGAATTCTCGG
+SPO11-3AD bot						GCCTTGGCACCC
+SPO11-3AD bot-1						GCCTTGGCACCC
+SPO11-5AD top						AGTTCAGAGTTC
+SPO11-5AD bot						AAGTCGATCGTC
+SPO11-5AD top-1						ATCGACTTCCCC
+SPO11-5AD top-2						ATCTGACTCCCC
+SPO11-5AD top-3						ATCCTGATCCCC
+SPO11-5AD top-4						ATCACTGTCCCC
+SPO11-5AD bot-1						AAGTCGATCGTC
+SPO11-5AD bot-2						AGTCAGATCGTC
+SPO11-5AD bot-3						ATCAGGATCGTC
+SPO11-5AD bot-4						ACAGTGATCGTC
