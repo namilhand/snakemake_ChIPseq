@@ -1,33 +1,26 @@
 SAMPLES: [
-          "WT_SPO11oligos_Rep1",
-          "WT_SPO11oligos_Rep2"
-#          "WT_SPO11oligos_Rep3"
+          "mnase-arp6",
+          "mnase-col0"
          ]
-THREADS: 48
+THREADS: 35
 MEMORY: "250g"
 FILTER:
   fastqc:
       adapters: "data/adapter_list.txt"
   cutadapt:
-      5prime_cut: 5 # -u ( 5 for Rep1 and Rep2, 10 for Rep3 )
-      3prime_cut: -0 # -u ( -0 for Rep1 and Rep2, -21 for Rep3 )
-      adapter: GGGTGGAATTCTCGGGTGCCAAGGCT # -a ( GGGTGGAATTCTCGGGTGCCAAGGCT for Rep1 and Rep2, GGGGTGGAATTCTCGGGTGCCAAGGCT for Rep3 )
-      quality-filter: 19 # -q
+      read1: AGATCGGAAGAG # ILLUMINA UNIVERSAL ADAPTER
+      read2: AGATCGGAAGAG # ILLUMINA UNIVERSAL ADAPTER
       minimum-overlap: 3 # -O (default: 3)
-      minimum-length: 20 # -m
-      maximum-length: 70 # -M
-      extra-params:
 # NOTE: reference genome-specific mapping parameters
 MAPPING:
-      alignments: 10 # "In -k <N> mode, Bowtie 2 searches for up to N distinct, valid alignments for each read"
-      reference: "data/index/TAIR10_chr_all"
-      MAPQunique: 42 # -q
+      # alignments: 10 # "In -k <N> mode, Bowtie 2 searches for up to N distinct, valid alignments for each read"
+      reference: "/home/nison/work/refgenome/TAIR10/bowtie2_index/tair10"
       MAPQmaxi: 10 # -q
       sortMemory: "5G"
 COVERAGE:
       normalizeUsing: "BPM"
-      ignoreForNormalization: "mitochondria chloroplast" # Reference genome-specific parameter
-      extendReads: 45
+      ignoreForNormalization: "ChrC ChrM" # Reference genome-specific parameter
+      extendReads: 150
       binSize: 1
       genomeBinSize: 10000
       genomeBinName: "10kb"

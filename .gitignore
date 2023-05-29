@@ -1,3 +1,6 @@
 archive
 raw
 .snakemake
+logs
+qc
+results
