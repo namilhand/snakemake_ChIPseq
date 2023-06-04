@@ -1,0 +1,34 @@
+SAMPLES: [
+          "mnase-arp6",
+          "mnase-col0"
+         ]
+THREADS: 35
+MEMORY: "250g"
+FILTER:
+  fastqc:
+      adapters: "data/adapter_list.txt"
+  cutadapt:
+      read1: AGATCGGAAGAG # ILLUMINA UNIVERSAL ADAPTER
+      read2: AGATCGGAAGAG # ILLUMINA UNIVERSAL ADAPTER
+      minimum-overlap: 3 # -O (default: 3)
+# NOTE: reference genome-specific mapping parameters
+MAPPING:
+      # alignments: 10 # "In -k <N> mode, Bowtie 2 searches for up to N distinct, valid alignments for each read"
+      reference: "/home/nison/work/refgenome/TAIR10/bowtie2_index/tair10"
+      MAPQmaxi: 10 # -q
+      sortMemory: "5G"
+COVERAGE:
+      normalizeUsing: "BPM"
+      ignoreForNormalization: "ChrC ChrM" # Reference genome-specific parameter
+      extendReads: 150
+      binSize: 1
+      genomeBinSize: 10000
+      genomeBinName: "10kb"
+
+# NEBNext adapter and universal primer for Illumina:
+# https://international.neb.com/-/media/catalog/datacards-or-manuals/manuale7335.pdf
+# https://www.biostars.org/p/149301/
+# https://cutadapt.readthedocs.io/en/stable/guide.html#illumina-truseq
+# http://bioinformatics.cvr.ac.uk/blog/illumina-adapter-and-primer-sequences/
+# TruSeq adapters:
+# http://emea.support.illumina.com/bulletins/2016/12/what-sequences-do-i-use-for-adapter-trimming.html
