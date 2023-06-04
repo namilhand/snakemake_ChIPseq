@@ -1,10 +1,15 @@
 # Snakemake workflow for mapping ChIP-seq libraries to a reference genome
 
 # Usage (snakemake --cores should reflect available cores):
-# conda env create --file environment.yaml --name ChIPseq_mapping
-# conda activate ChIPseq_mapping
+# conda env create --file environment.yaml --name ChIPseq
+# conda activate ChIPseq
 # snakemake -p --cores 48
 # conda deactivate
+
+# ===== WHAT ELSE AFTER RUNNING THIS PIPELINE? =====
+# Use src/bwCompare_TSV.sh to calculate log2 ratio of ChIP-seq signal to control.
+# src/genomeBin_bedgraphToTSV.R converts bedgraph form to TSV which can be used for drawing chromosome landscape. TSV separates bedgraph bins that are merged.
+# ==================================================
 
 import pandas as pd
 import os
@@ -52,15 +57,8 @@ rule all:
                sample = sample,
                refbase = refbase,
                genomeBinName = genomeBinName)
-        # expand("mapped/both/tsv/{sample}_MappedOn_{refbase}_lowXM_both_sort_norm_binSize{genomeBinName}.tsv",
-        #        sample = sample,
-        #        refbase = refbase,
-        #        genomeBinName = genomeBinName),
-        # expand("mapped/both/pb/{sample}_MappedOn_{refbase}_lowXM_both_sort_norm.perbase",
-        #        sample = sample,
-        #        refbase = refbase)
 
-# Run fastqc on single-end raw data
+# Run fastqc on paired-end raw data
 rule fastqc_raw:
     """Create fastqc report"""
     input:
@@ -91,9 +89,7 @@ rule cutadapt:
     params:
         read1_trim=config["FILTER"]["cutadapt"]["read1"], 
         read2_trim=config["FILTER"]["cutadapt"]["read2"], 
-        min_overlap=config["FILTER"]["cutadapt"]["minimum-overlap"], 
-        # minimum_length=config["FILTER"]["cutadapt"]["minimum-length"],
-        # maximum_length=config["FILTER"]["cutadapt"]["maximum-length"]
+        min_overlap=config["FILTER"]["cutadapt"]["minimum-overlap"] 
     log:
         "logs/cutadapt/{sample}_trimmed.log"
     shell:
@@ -103,8 +99,6 @@ rule cutadapt:
         {input.read1} {input.read2} \
         -o {output.tr1} -p {output.tr2} > {output.qc} 2> {log}
         """
-        # -m {params.minimum_length} -M {params.maximum_length} \
-
 
 # Run fastqc on trimmed data
 rule fastqc_trimmed:
@@ -248,47 +242,3 @@ rule calc_coverage_genome:
         " --exactScaling"
         " --extendReads {params.extendReads}"
         " --binSize {params.genomeBinSize} -p {threads}) 2> {log}"
-
-# Use R script genomeBin_bedgraphToTSV.R to convert *{genomeBinName}.bedgraph files into TSV files
-# These TSV files can be imported into R for calculating and plotting log2(ChIP/control) chromosome-scale profiles
-rule bedgraphToTSV:
-    """Convert *{genomeBinName}.bedgraph files into TSV files"""
-    input:
-        uniqueBGgenome = "mapped/unique/bg/{sample}_MappedOn_{refbase}_nuclear_unique_sort_norm_binSize{genomeBinName}.bedgraph",
-        bothBGgenome   = "mapped/both/bg/{sample}_MappedOn_{refbase}_nuclear_both_sort_norm_binSize{genomeBinName}.bedgraph"
-    output:
-        uniqueTSVgenome = "mapped/unique/tsv/{sample}_MappedOn_{refbase}_lowXM_unique_sort_norm_binSize{genomeBinName}.tsv",
-        bothTSVgenome   = "mapped/both/tsv/{sample}_MappedOn_{refbase}_lowXM_both_sort_norm_binSize{genomeBinName}.tsv"
-    params:
-        genomeBinSize = config["COVERAGE"]["genomeBinSize"]
-    log:
-        unique = "logs/genomeBin_bedgraphToTSV/{sample}_MappedOn_{refbase}_lowXM_unique_sort_norm_binSize{genomeBinName}.log",
-        both   = "logs/genomeBin_bedgraphToTSV/{sample}_MappedOn_{refbase}_lowXM_both_sort_norm_binSize{genomeBinName}.log"
-    threads: config["THREADS"]
-    shell:
-        "(scripts/genomeBin_bedgraphToTSV.R"
-        " {wildcards.sample}"
-        " {refbase}"
-        " unique"
-        " {params.genomeBinSize}) 2> {log.unique}; "
-        "(scripts/genomeBin_bedgraphToTSV.R"
-        " {wildcards.sample}"
-        " {refbase}"
-        " both"
-        " {params.genomeBinSize}) 2> {log.both}"
-
-# Convert bedgraph to per-base 1-based coverage file
-rule per_base_coverage:
-    """Convert bedgraph to per-base 1-based coverage file"""
-    input:
-        uniqueBG = "mapped/unique/bg/{sample}_MappedOn_{refbase}_lowXM_unique_sort_norm.bedgraph",
-        bothBG   = "mapped/both/bg/{sample}_MappedOn_{refbase}_lowXM_both_sort_norm.bedgraph"
-    output:
-        uniquePB = "mapped/unique/pb/{sample}_MappedOn_{refbase}_lowXM_unique_sort_norm.perbase",
-        bothPB   = "mapped/both/pb/{sample}_MappedOn_{refbase}_lowXM_both_sort_norm.perbase"
-    log:
-        unique = "logs/perBaseCoverage/{sample}_MappedOn_{refbase}_lowXM_unique_sort_norm_pb.log",
-        both = "logs/perBaseCoverage/{sample}_MappedOn_{refbase}_lowXM_both_sort_norm_pb.log"
-    shell:
-        "(bash scripts/perbase_1based_coverage.sh {input.bothBG} {output.bothPB} ) 2> {log.both}; "
-        "(bash scripts/perbase_1based_coverage.sh {input.uniqueBG} {output.uniquePB} ) 2> {log.unique}"
