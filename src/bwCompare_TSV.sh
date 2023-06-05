@@ -16,6 +16,7 @@ refgenome_fasta="/home/nison/work/refgenome/TAIR10/TAIR10.fasta"
 
 mkdir -p $dirout
 
+# turn off toTSV module in the bwcompare function if binSize = 1bp
 function bwcompare {
     chip=$1
     control=$2
@@ -23,6 +24,8 @@ function bwcompare {
 	binSize=$4
 	binName=$5
 	dirout=$6
+	# bedg file will be transformed to tsv format by default. Set $7 as 0 if not desired.
+	toTSV=${7:-1}
 
     bigwigCompare -b1 $chip -b2 $control -of bedgraph \
         --binSize $binSize \
@@ -39,8 +42,9 @@ function bwcompare {
 		--operation log2 \
         --skipZeroOverZero \
         -o $dirout/${prefix}_log2ChIP_binSize${binName}.bw
-
-	Rscript $toTSV $dirout/${prefix}_log2ChIP_binSize${binName}.bg $refgenome_fasta ${binSize}
+	if [[ $toTSV ]]; then
+		Rscript $toTSV $dirout/${prefix}_log2ChIP_binSize${binName}.bg $refgenome_fasta ${binSize}
+	fi
 }
 
 bwcompare $bw_test $bw_ctrl K9me2_WT-bud 1 1bp $dirout
