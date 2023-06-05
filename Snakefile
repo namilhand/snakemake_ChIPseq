@@ -56,7 +56,9 @@ rule all:
         expand("results/03_bamCoverage/bg/{sample}_MappedOn_{refbase}_nuclear_sort_md_norm_binSize{genomeBinName}.bedgraph",
                sample = sample,
                refbase = refbase,
-               genomeBinName = genomeBinName)
+               genomeBinName = genomeBinName),
+        expand("results/04_log2ChIP/{sample}_log2ChIP_binSize{genomeBinName}.bg", sample = config["SAMPLEGROUP"]["ChIP"], genomeBinName = config["COVERAGE"]["genomeBinName"]),
+        expand("results/04_log2ChIP/{sample}_log2ChIP_binSize{genomeBinName}.bw", sample = config["SAMPLEGROUP"]["ChIP"], genomeBinName = config["COVERAGE"]["genomeBinName"])
 
 # Run fastqc on paired-end raw data
 rule fastqc_raw:
@@ -242,3 +244,30 @@ rule calc_coverage_genome:
         " --exactScaling"
         " --extendReads {params.extendReads}"
         " --binSize {params.genomeBinSize} -p {threads}) 2> {log}"
+rule bwcompare:
+	output:
+		bg=expand("results/04_log2ChIP/{sample}_log2ChIP_binSize{genomeBinName}.bg", sample = config["SAMPLEGROUP"]["ChIP"], genomeBinName = config["COVERAGE"]["genomeBinName"]),
+		bw=expand("results/04_log2ChIP/{sample}_log2ChIP_binSize{genomeBinName}.bw", sample = config["SAMPLEGROUP"]["ChIP"], genomeBinName = config["COVERAGE"]["genomeBinName"])
+	input:
+		chip=expand("results/03_bamCoverage/bw/{sample}_MappedOn_{refbase}_nuclear_sort_md_norm_1bp-resolution.bw", sample = config["SAMPLEGROUP"]["ChIP"], refbase={refbase}),
+		ctrl=expand("results/03_bamCoverage/bw/{sample}_MappedOn_{refbase}_nuclear_sort_md_norm_1bp-resolution.bw", sample = config["SAMPLEGROUP"]["control"], refbase={refbase})
+	params:
+		genomeBinSize=config["COVERAGE"]["genomeBinSize"]
+	threads: config["THREADS"]
+	shell:
+		r"""
+		bigwigCompare -b1 {input.chip} -b2 {input.ctrl} -of bedgraph \
+						--binSize {params.genomeBinSize} \
+						-p {threads} \
+						--pseudocount 1 \
+						--operation log2 \
+						--skipZeroOverZero \
+						-o {output.bg};
+		bigwigCompare -b1 {input.chip} -b2 {input.ctrl} -of bigwig\
+						--binSize {params.genomeBinSize} \
+						-p {threads} \
+						--pseudocount 1 \
+						--operation log2 \
+						--skipZeroOverZero \
+						-o {output.bw};
+		"""
