@@ -2,9 +2,9 @@ SAMPLES: [
           "ERR3813867",
           "ERR3813868"
          ]
-SAMPLEGROUP:
-  ChIP: "ERR3813867"
-  control: "ERR3813868"
+# SAMPLEGROUP:
+#   ChIP: "ERR3813867"
+#   control: "ERR3813868"
 THREADS: 35
 MEMORY: "250g"
 FILTER:
