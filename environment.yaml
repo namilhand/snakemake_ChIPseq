@@ -11,6 +11,6 @@ dependencies:
   - bowtie2=2.5.1
   - picard=3.0.0
   - samtools=1.17
-  - deeptools=3.5.0
+  - deeptools=3.5.2
   - ucsc-facount=377
   - ucsc-bedgraphtobigwig=377

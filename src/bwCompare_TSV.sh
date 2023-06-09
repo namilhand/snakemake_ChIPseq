@@ -25,16 +25,9 @@ function bwcompare {
 	binName=$5
 	dirout=$6
 	# bedg file will be transformed to tsv format by default. Set $7 as 0 if not desired.
-	toTSV=${7:-1}
+	toTsv=${7:-1}
+    toBedg=${8:-1}
 
-    bigwigCompare -b1 $chip -b2 $control -of bedgraph \
-        --binSize $binSize \
-        -p $threads \
-		--pseudocount 1 \
-		--operation log2 \
-        --skipZeroOverZero \
-        -o $dirout/${prefix}_log2ChIP_binSize${binName}.bg
-    # --skipZeroOverZero: Skip bins where BOTH BAM files lack coverage.
     bigwigCompare -b1 $chip -b2 $control -of bigwig \
         --binSize $binSize \
         -p $threads \
@@ -42,10 +35,23 @@ function bwcompare {
 		--operation log2 \
         --skipZeroOverZero \
         -o $dirout/${prefix}_log2ChIP_binSize${binName}.bw
-	if [[ $toTSV ]]; then
+
+    if [[ $toBedg == 1 ]]; then
+        bigwigCompare -b1 $chip -b2 $control -of bedgraph \
+            --binSize $binSize \
+            -p $threads \
+	    	--pseudocount 1 \
+	    	--operation log2 \
+            --skipZeroOverZero \
+            -o $dirout/${prefix}_log2ChIP_binSize${binName}.bg
+    fi
+    # --skipZeroOverZero: Skip bins where BOTH BAM files lack coverage.
+
+	if [[ $toTsv == 1 ]]; then
 		Rscript $toTSV $dirout/${prefix}_log2ChIP_binSize${binName}.bg $refgenome_fasta ${binSize}
 	fi
 }
 
-bwcompare $bw_test $bw_ctrl K9me2_WT-bud 1 1bp $dirout
+#bwcompare $bw_test $bw_ctrl K9me2_WT-bud 1 1bp $dirout
+bwcompare $bw_test $bw_ctrl K9me2_WT-bud 100000 100kb $dirout 1 1
 
