@@ -56,9 +56,15 @@ rule all:
         expand("results/03_bamCoverage/bg/{sample}_MappedOn_{refbase}_nuclear_sort_md_norm_binSize{genomeBinName}.bedgraph",
                sample = sample,
                refbase = refbase,
-               genomeBinName = genomeBinName)
-        # expand("results/04_log2ChIP/{sample}_log2ChIP_binSize{genomeBinName}.bg", sample = config["SAMPLEGROUP"]["ChIP"], genomeBinName = config["COVERAGE"]["genomeBinName"]),
-        # expand("results/04_log2ChIP/{sample}_log2ChIP_binSize{genomeBinName}.bw", sample = config["SAMPLEGROUP"]["ChIP"], genomeBinName = config["COVERAGE"]["genomeBinName"])
+               genomeBinName = genomeBinName),
+        # expand("results/05_metaprofile/{region}/{sample}_metaprofile_region-{region}_referencePoint-{refpoint}.gz",
+        #         sample = ["MNase_suf3-bud", "MNase_WT-bud"],
+        #         region = ["genes"],
+        #         refpoint = ["TSS", "TES"]),
+        # expand("results/05_metaprofile/{region}/{sample}_metaprofile_region-{region}_referencePoint-{refpoint}.tsv",
+        #         sample = ["MNase_suf3-bud", "MNase_WT-bud"],
+        #         region = ["genes"],
+        #         refpoint = ["TSS", "TES"]),
 
 # Run fastqc on paired-end raw data
 rule fastqc_raw:
@@ -247,30 +253,48 @@ rule calc_coverage_genome:
         " --exactScaling"
         " --extendReads {params.extendReads}"
         " --binSize {params.genomeBinSize} -p {threads}) 2> {log}"
-# rule bwcompare:
-# 	output:
-# 		bg=expand("results/04_log2ChIP/{sample}_log2ChIP_binSize{genomeBinName}.bg", sample = config["SAMPLEGROUP"]["ChIP"], genomeBinName = config["COVERAGE"]["genomeBinName"]),
-# 		bw=expand("results/04_log2ChIP/{sample}_log2ChIP_binSize{genomeBinName}.bw", sample = config["SAMPLEGROUP"]["ChIP"], genomeBinName = config["COVERAGE"]["genomeBinName"])
-# 	input:
-# 		chip=expand("results/03_bamCoverage/bw/{sample}_MappedOn_{refbase}_nuclear_sort_md_norm_1bp-resolution.bw", sample = config["SAMPLEGROUP"]["ChIP"], refbase={refbase}),
-# 		ctrl=expand("results/03_bamCoverage/bw/{sample}_MappedOn_{refbase}_nuclear_sort_md_norm_1bp-resolution.bw", sample = config["SAMPLEGROUP"]["control"], refbase={refbase})
-# 	params:
-# 		genomeBinSize=config["COVERAGE"]["genomeBinSize"]
-# 	threads: config["THREADS"]
-# 	shell:
-# 		r"""
-# 		bigwigCompare -b1 {input.chip} -b2 {input.ctrl} -of bedgraph \
-# 						--binSize {params.genomeBinSize} \
-# 						-p {threads} \
-# 						--pseudocount 1 \
-# 						--operation log2 \
-# 						--skipZeroOverZero \
-# 						-o {output.bg};
-# 		bigwigCompare -b1 {input.chip} -b2 {input.ctrl} -of bigwig\
-# 						--binSize {params.genomeBinSize} \
-# 						-p {threads} \
-# 						--pseudocount 1 \
-# 						--operation log2 \
-# 						--skipZeroOverZero \
-# 						-o {output.bw};
-# 		"""
+rule metaprofile:
+    output:
+        gzip = "results/05_metaprofile/{region}/{sample}_metaprofile_region-{region}_referencePoint-{refpoint}.gz",
+        tab = "results/05_metaprofile/{region}/{sample}_metaprofile_region-{region}_referencePoint-{refpoint}.tab",
+        bed = "results/05_metaprofile/{region}/{sample}_metaprofile_region-{region}_referencePoint-{refpoint}.bed"
+    input:
+        "results/04_log2ChIP/{sample}_log2ChIP_binSize1bp.bw"
+    params:
+        refpoint="{refpoint}",
+        region = config["METAPROFILE"]["region"],
+        binSize = config["METAPROFILE"]["binSize"]
+    threads: config["THREADS"] 
+    log:
+        "logs/metaprofile/{sample}_metaprofile_region-{region}_referencePoint-{refpoint}.log"
+    shell:
+        r"""
+        computeMatrix reference-point \
+            --referencePoint {params.refpoint} \
+            -b 2000 -a 2000 \
+            -R {params.region} \
+            -S {input} \
+            --binSize {params.binSize} \
+            --sortRegions "keep" \
+            --sortUsing "mean" \
+            --samplesLabel {wildcards.sample} \
+            --nanAfterEnd \
+            -p {threads} \
+            --outFileName {output.gzip} \
+            --outFileNameMatrix {output.tab} \
+            --outFileSortedRegions {output.bed} &> {log}
+        """
+rule avgBins:
+    output: "results/05_metaprofile/{region}/{sample}_metaprofile_region-{region}_referencePoint-{refpoint}.tsv"
+    input: "results/05_metaprofile/{region}/{sample}_metaprofile_region-{region}_referencePoint-{refpoint}.tab"
+    params:
+        upstream = config["METAPROFILE"]["upstream"],
+        downstream = config["METAPROFILE"]["downstream"],
+        binSize = config["METAPROFILE"]["binSize"]
+    shell:
+        r"""
+        Rscript src/averageComputeMatrixTab.R {input} \
+        {params.upstream} {params.downstream} \
+        {params.binSize} \
+        {output}
+        """

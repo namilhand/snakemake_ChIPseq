@@ -28,6 +28,12 @@ COVERAGE:
       genomeBinSize: 10000
       genomeBinName: "10kb"
 
+METAPROFILE:
+      region: "/home/nison/work/various_regions/araport11_protein-coding-genes_chr15.bed"
+      binSize: 10
+      upstream: 2000
+      downstream: 2000
+
 # NEBNext adapter and universal primer for Illumina:
 # https://international.neb.com/-/media/catalog/datacards-or-manuals/manuale7335.pdf
 # https://www.biostars.org/p/149301/

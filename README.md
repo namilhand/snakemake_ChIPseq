@@ -11,6 +11,4 @@ Normalization of ChIP-seq reads by control data (such as ChIP-seq input) is not 
 4. snakemake -p --cores <threads>
 5. Apply the step 2-4 to both control and ChIP-seq data.
 6. Edit and run src/bwCompare_TSV.sh
-7. If you want to draw a metaprofile of a set of region (deeptools:computeMatrix), uncomment rule "metaprofile" and "avgBins". Edit configure.yaml accordingly and run the Snakemake again.
-
-
+7. If you want to draw a metaprofile of a set of region (deeptools:computeMatrix), uncomment rule "metaprofile" and "avgBins". Edit Snakefile input and configure.yaml accordingly, and run the Snakemake again.
